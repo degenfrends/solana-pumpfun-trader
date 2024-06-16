@@ -1,20 +1,60 @@
+"use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
-import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction as Transaction2, TransactionInstruction } from "@solana/web3.js";
-import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
+var src_exports = {};
+__export(src_exports, {
+  ASSOC_TOKEN_ACC_PROG: () => ASSOC_TOKEN_ACC_PROG,
+  FEE_RECIPIENT: () => FEE_RECIPIENT,
+  GLOBAL: () => GLOBAL,
+  PUMP_FUN_ACCOUNT: () => PUMP_FUN_ACCOUNT,
+  PUMP_FUN_PROGRAM: () => PUMP_FUN_PROGRAM,
+  RENT: () => RENT,
+  SYSTEM_PROGRAM_ID: () => SYSTEM_PROGRAM_ID,
+  TOKEN_PROGRAM_ID: () => TOKEN_PROGRAM_ID,
+  default: () => PumpFunTrader
+});
+module.exports = __toCommonJS(src_exports);
+var import_web34 = require("@solana/web3.js");
+var import_spl_token = require("@solana/spl-token");
 
 // src/utils/create-transaction.ts
-import { Transaction, ComputeBudgetProgram } from "@solana/web3.js";
+var import_web3 = require("@solana/web3.js");
 async function createTransaction(connection, instructions, wallet, priorityFee = 0) {
-  const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+  const modifyComputeUnits = import_web3.ComputeBudgetProgram.setComputeUnitLimit({
     units: 14e5
   });
-  const transaction = new Transaction().add(modifyComputeUnits);
+  const transaction = new import_web3.Transaction().add(modifyComputeUnits);
   if (priorityFee > 0) {
     const microLamports = priorityFee * 1e9;
-    const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
+    const addPriorityFee = import_web3.ComputeBudgetProgram.setComputeUnitPrice({
       microLamports
     });
     transaction.add(addPriorityFee);
@@ -27,10 +67,10 @@ async function createTransaction(connection, instructions, wallet, priorityFee =
 __name(createTransaction, "createTransaction");
 
 // src/utils/send-transaction.ts
-import { sendAndConfirmTransaction } from "@solana/web3.js";
+var import_web32 = require("@solana/web3.js");
 async function sendTransaction(connection, transaction, signers) {
   try {
-    const signature = await sendAndConfirmTransaction(connection, transaction, signers, {
+    const signature = await (0, import_web32.sendAndConfirmTransaction)(connection, transaction, signers, {
       skipPreflight: true,
       preflightCommitment: "confirmed"
     });
@@ -44,10 +84,10 @@ async function sendTransaction(connection, transaction, signers) {
 __name(sendTransaction, "sendTransaction");
 
 // src/utils/helper.ts
-import { Keypair } from "@solana/web3.js";
-import bs58 from "bs58";
+var import_web33 = require("@solana/web3.js");
+var import_bs58 = __toESM(require("bs58"), 1);
 async function getKeyPairFromPrivateKey(key) {
-  return Keypair.fromSecretKey(new Uint8Array(bs58.decode(key)));
+  return import_web33.Keypair.fromSecretKey(new Uint8Array(import_bs58.default.decode(key)));
 }
 __name(getKeyPairFromPrivateKey, "getKeyPairFromPrivateKey");
 function bufferFromUInt64(value) {
@@ -58,11 +98,11 @@ function bufferFromUInt64(value) {
 __name(bufferFromUInt64, "bufferFromUInt64");
 
 // src/utils/get-token-data.ts
-import axios from "axios";
+var import_axios = __toESM(require("axios"), 1);
 async function getCoinData(mintStr) {
   try {
     const url = `https://frontend-api.pump.fun/coins/${mintStr}`;
-    const response = await axios.get(url, {
+    const response = await import_axios.default.get(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
         Accept: "*/*",
@@ -91,14 +131,14 @@ async function getCoinData(mintStr) {
 __name(getCoinData, "getCoinData");
 
 // src/index.ts
-var GLOBAL = new PublicKey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf");
-var FEE_RECIPIENT = new PublicKey("CebN5WGQ4jvEPvsVU4EoHEpgzq1VV7AbicfhtW4xC9iM");
-var TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-var ASSOC_TOKEN_ACC_PROG = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
-var RENT = new PublicKey("SysvarRent111111111111111111111111111111111");
-var PUMP_FUN_PROGRAM = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
-var PUMP_FUN_ACCOUNT = new PublicKey("Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1");
-var SYSTEM_PROGRAM_ID = SystemProgram.programId;
+var GLOBAL = new import_web34.PublicKey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf");
+var FEE_RECIPIENT = new import_web34.PublicKey("CebN5WGQ4jvEPvsVU4EoHEpgzq1VV7AbicfhtW4xC9iM");
+var TOKEN_PROGRAM_ID = new import_web34.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+var ASSOC_TOKEN_ACC_PROG = new import_web34.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+var RENT = new import_web34.PublicKey("SysvarRent111111111111111111111111111111111");
+var PUMP_FUN_PROGRAM = new import_web34.PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
+var PUMP_FUN_ACCOUNT = new import_web34.PublicKey("Ce6TQqeHC9p8KetsN6JsjHK7UTZk7nasjjnr7XxXp9F1");
+var SYSTEM_PROGRAM_ID = import_web34.SystemProgram.programId;
 var PumpFunTrader = class {
   static {
     __name(this, "PumpFunTrader");
@@ -106,11 +146,11 @@ var PumpFunTrader = class {
   connection;
   logger;
   constructor(solanaRpcUrl = "https://api.mainnet-beta.solana.com", logger = console) {
-    this.connection = new Connection(solanaRpcUrl, "confirmed");
+    this.connection = new import_web34.Connection(solanaRpcUrl, "confirmed");
     this.logger = logger;
   }
   setSolanaRpcUrl(solanaRpcUrl) {
-    this.connection = new Connection(solanaRpcUrl, "confirmed");
+    this.connection = new import_web34.Connection(solanaRpcUrl, "confirmed");
     return this;
   }
   setLogger(logger) {
@@ -126,25 +166,25 @@ var PumpFunTrader = class {
       }
       const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
       const owner = walletPrivateKey.publicKey;
-      const token = new PublicKey(tokenAddress);
-      const txBuilder = new Transaction2();
-      const tokenAccountAddress = await getAssociatedTokenAddress(token, owner, false);
+      const token = new import_web34.PublicKey(tokenAddress);
+      const txBuilder = new import_web34.Transaction();
+      const tokenAccountAddress = await (0, import_spl_token.getAssociatedTokenAddress)(token, owner, false);
       const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
       let tokenAccount;
       if (!tokenAccountInfo) {
-        txBuilder.add(createAssociatedTokenAccountInstruction(walletPrivateKey.publicKey, tokenAccountAddress, walletPrivateKey.publicKey, token));
+        txBuilder.add((0, import_spl_token.createAssociatedTokenAccountInstruction)(walletPrivateKey.publicKey, tokenAccountAddress, walletPrivateKey.publicKey, token));
         tokenAccount = tokenAccountAddress;
       } else {
         tokenAccount = tokenAccountAddress;
       }
-      const solInLamports = amount * LAMPORTS_PER_SOL;
+      const solInLamports = amount * import_web34.LAMPORTS_PER_SOL;
       const tokenOut = Math.floor(solInLamports * coinData["virtual_token_reserves"] / coinData["virtual_sol_reserves"]);
       const amountWithSlippage = amount * (1 + slippage);
-      const maxSolCost = Math.floor(amountWithSlippage * LAMPORTS_PER_SOL);
+      const maxSolCost = Math.floor(amountWithSlippage * import_web34.LAMPORTS_PER_SOL);
       const ASSOCIATED_USER = tokenAccount;
       const USER = owner;
-      const BONDING_CURVE = new PublicKey(coinData["bonding_curve"]);
-      const ASSOCIATED_BONDING_CURVE = new PublicKey(coinData["associated_bonding_curve"]);
+      const BONDING_CURVE = new import_web34.PublicKey(coinData["bonding_curve"]);
+      const ASSOCIATED_BONDING_CURVE = new import_web34.PublicKey(coinData["associated_bonding_curve"]);
       const keys = [
         {
           pubkey: GLOBAL,
@@ -212,7 +252,7 @@ var PumpFunTrader = class {
         bufferFromUInt64(tokenOut),
         bufferFromUInt64(maxSolCost)
       ]);
-      const instruction = new TransactionInstruction({
+      const instruction = new import_web34.TransactionInstruction({
         keys,
         programId: PUMP_FUN_PROGRAM,
         data
@@ -241,13 +281,13 @@ var PumpFunTrader = class {
       }
       const payer = await getKeyPairFromPrivateKey(privateKey);
       const owner = payer.publicKey;
-      const mint = new PublicKey(tokenAddress);
-      const txBuilder = new Transaction2();
-      const tokenAccountAddress = await getAssociatedTokenAddress(mint, owner, false);
+      const mint = new import_web34.PublicKey(tokenAddress);
+      const txBuilder = new import_web34.Transaction();
+      const tokenAccountAddress = await (0, import_spl_token.getAssociatedTokenAddress)(mint, owner, false);
       const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
       let tokenAccount;
       if (!tokenAccountInfo) {
-        txBuilder.add(createAssociatedTokenAccountInstruction(payer.publicKey, tokenAccountAddress, payer.publicKey, mint));
+        txBuilder.add((0, import_spl_token.createAssociatedTokenAccountInstruction)(payer.publicKey, tokenAccountAddress, payer.publicKey, mint));
         tokenAccount = tokenAccountAddress;
       } else {
         tokenAccount = tokenAccountAddress;
@@ -270,12 +310,12 @@ var PumpFunTrader = class {
           isWritable: false
         },
         {
-          pubkey: new PublicKey(coinData["bonding_curve"]),
+          pubkey: new import_web34.PublicKey(coinData["bonding_curve"]),
           isSigner: false,
           isWritable: true
         },
         {
-          pubkey: new PublicKey(coinData["associated_bonding_curve"]),
+          pubkey: new import_web34.PublicKey(coinData["associated_bonding_curve"]),
           isSigner: false,
           isWritable: true
         },
@@ -320,7 +360,7 @@ var PumpFunTrader = class {
         bufferFromUInt64(tokenBalance),
         bufferFromUInt64(minSolOutput)
       ]);
-      const instruction = new TransactionInstruction({
+      const instruction = new import_web34.TransactionInstruction({
         keys,
         programId: PUMP_FUN_PROGRAM,
         data
@@ -341,7 +381,8 @@ var PumpFunTrader = class {
     }
   }
 };
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   ASSOC_TOKEN_ACC_PROG,
   FEE_RECIPIENT,
   GLOBAL,
@@ -349,6 +390,5 @@ export {
   PUMP_FUN_PROGRAM,
   RENT,
   SYSTEM_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  PumpFunTrader as default
-};
+  TOKEN_PROGRAM_ID
+});
