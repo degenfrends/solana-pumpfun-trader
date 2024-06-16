@@ -3,6 +3,7 @@
     "version": "0.0.3",
     "description": "Functions to buy and sell SPL tokens on pump.fun",
     "main": "src/index.ts",
+    "type": "module",
     "scripts": {
         "build": "tsup src/index.ts --format cjs,esm --dts",
         "test": "jest --config jest.config.ts --detectOpenHandles --coverage --maxWorkers=1",
