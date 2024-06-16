@@ -1,5 +1,11 @@
 # @degenfrends/solana-pumpfun-trader
 
+## 0.0.5
+
+### Patch Changes
+
+-   a5dad60: ## @degenfrends/solana-pumpfun-trader: Fixed method stub
+
 ## 0.0.4
 
 ### Patch Changes
