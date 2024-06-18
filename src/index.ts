@@ -47,11 +47,11 @@ export default class PumpFunTrader {
             const txBuilder = new Transaction();
 
             const instruction = await this.getBuyInstruction(privateKey, tokenAddress, amount, slippage, txBuilder);
-            if (!instruction) {
+            if (!instruction?.instruction) {
                 this.logger.error('Failed to retrieve buy instruction...');
                 return;
             }
-            txBuilder.add(instruction);
+            txBuilder.add(instruction.instruction);
             await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
         } catch (error) {
             this.logger.log(error);
@@ -151,7 +151,7 @@ export default class PumpFunTrader {
             data: data
         });
 
-        return instruction;
+        return { instruction: instruction, tokenAmount: tokenOut };
     }
     async getSellInstruction(privateKey: string, tokenAddress: string, tokenBalance: number, priorityFee: number = 0, slippage: number = 0.25) {
         const coinData = await getCoinData(tokenAddress);
