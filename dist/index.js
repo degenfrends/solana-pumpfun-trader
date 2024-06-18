@@ -166,127 +166,37 @@ var PumpFunTrader = class {
         return;
       }
       txBuilder.add(instruction);
-      const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
-      const transaction = await createTransaction(this.connection, txBuilder.instructions, walletPrivateKey.publicKey, priorityFee);
-      if (isSimulation == false) {
-        const signature = await sendTransaction(this.connection, transaction, [
-          walletPrivateKey
-        ]);
-        this.logger.log("Buy transaction confirmed:", signature);
-      } else if (isSimulation == true) {
-        const simulatedResult = await this.connection.simulateTransaction(transaction);
-        this.logger.log(simulatedResult);
-      }
+      await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
     } catch (error) {
       this.logger.log(error);
     }
   }
   async sell(privateKey, tokenAddress, tokenBalance, priorityFee = 0, slippage = 0.25, isSimulation = true) {
     try {
-      const coinData = await getCoinData(tokenAddress);
-      if (!coinData) {
-        this.logger.error("Failed to retrieve coin data...");
+      const instruction = await this.getSellInstruction(privateKey, tokenAddress, tokenBalance, priorityFee, slippage);
+      const txBuilder = new import_web34.Transaction();
+      if (!instruction) {
+        this.logger.error("Failed to retrieve sell instruction...");
         return;
       }
-      const payer = await getKeyPairFromPrivateKey(privateKey);
-      const owner = payer.publicKey;
-      const mint = new import_web34.PublicKey(tokenAddress);
-      const txBuilder = new import_web34.Transaction();
-      const tokenAccountAddress = await (0, import_spl_token.getAssociatedTokenAddress)(mint, owner, false);
-      const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
-      let tokenAccount;
-      if (!tokenAccountInfo) {
-        txBuilder.add((0, import_spl_token.createAssociatedTokenAccountInstruction)(payer.publicKey, tokenAccountAddress, payer.publicKey, mint));
-        tokenAccount = tokenAccountAddress;
-      } else {
-        tokenAccount = tokenAccountAddress;
-      }
-      const minSolOutput = Math.floor(tokenBalance * (1 - slippage) * coinData["virtual_sol_reserves"] / coinData["virtual_token_reserves"]);
-      const keys = [
-        {
-          pubkey: GLOBAL,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: FEE_RECIPIENT,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: mint,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: new import_web34.PublicKey(coinData["bonding_curve"]),
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: new import_web34.PublicKey(coinData["associated_bonding_curve"]),
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: tokenAccount,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: owner,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: SYSTEM_PROGRAM_ID,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: ASSOC_TOKEN_ACC_PROG,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: TOKEN_PROGRAM_ID,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: PUMP_FUN_ACCOUNT,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: PUMP_FUN_PROGRAM,
-          isSigner: false,
-          isWritable: false
-        }
-      ];
-      const data = Buffer.concat([
-        bufferFromUInt64("12502976635542562355"),
-        bufferFromUInt64(tokenBalance),
-        bufferFromUInt64(minSolOutput)
-      ]);
-      const instruction = new import_web34.TransactionInstruction({
-        keys,
-        programId: PUMP_FUN_PROGRAM,
-        data
-      });
       txBuilder.add(instruction);
-      const transaction = await createTransaction(this.connection, txBuilder.instructions, payer.publicKey, priorityFee);
-      if (isSimulation == false) {
-        const signature = await sendTransaction(this.connection, transaction, [
-          payer
-        ]);
-        this.logger.log("Sell transaction confirmed:", signature);
-      } else if (isSimulation == true) {
-        const simulatedResult = await this.connection.simulateTransaction(transaction);
-        this.logger.log(simulatedResult);
-      }
+      const payer = await getKeyPairFromPrivateKey(privateKey);
+      await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
     } catch (error) {
       this.logger.log(error);
+    }
+  }
+  async createAndSendTransaction(txBuilder, privateKey, priorityFee = 0, isSimulation = true) {
+    const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
+    const transaction = await createTransaction(this.connection, txBuilder.instructions, walletPrivateKey.publicKey, priorityFee);
+    if (isSimulation == false) {
+      const signature = await sendTransaction(this.connection, transaction, [
+        walletPrivateKey
+      ]);
+      this.logger.log("Buy transaction confirmed:", signature);
+    } else if (isSimulation == true) {
+      const simulatedResult = await this.connection.simulateTransaction(transaction);
+      this.logger.log(simulatedResult);
     }
   }
   async getBuyInstruction(privateKey, tokenAddress, amount, slippage = 0.25, txBuilder) {
@@ -381,6 +291,100 @@ var PumpFunTrader = class {
       bufferFromUInt64("16927863322537952870"),
       bufferFromUInt64(tokenOut),
       bufferFromUInt64(maxSolCost)
+    ]);
+    const instruction = new import_web34.TransactionInstruction({
+      keys,
+      programId: PUMP_FUN_PROGRAM,
+      data
+    });
+    return instruction;
+  }
+  async getSellInstruction(privateKey, tokenAddress, tokenBalance, priorityFee = 0, slippage = 0.25) {
+    const coinData = await getCoinData(tokenAddress);
+    if (!coinData) {
+      this.logger.error("Failed to retrieve coin data...");
+      return;
+    }
+    const payer = await getKeyPairFromPrivateKey(privateKey);
+    const owner = payer.publicKey;
+    const mint = new import_web34.PublicKey(tokenAddress);
+    const txBuilder = new import_web34.Transaction();
+    const tokenAccountAddress = await (0, import_spl_token.getAssociatedTokenAddress)(mint, owner, false);
+    const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
+    let tokenAccount;
+    if (!tokenAccountInfo) {
+      txBuilder.add((0, import_spl_token.createAssociatedTokenAccountInstruction)(payer.publicKey, tokenAccountAddress, payer.publicKey, mint));
+      tokenAccount = tokenAccountAddress;
+    } else {
+      tokenAccount = tokenAccountAddress;
+    }
+    const minSolOutput = Math.floor(tokenBalance * (1 - slippage) * coinData["virtual_sol_reserves"] / coinData["virtual_token_reserves"]);
+    const keys = [
+      {
+        pubkey: GLOBAL,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: FEE_RECIPIENT,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: mint,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: new import_web34.PublicKey(coinData["bonding_curve"]),
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: new import_web34.PublicKey(coinData["associated_bonding_curve"]),
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: tokenAccount,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: owner,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: SYSTEM_PROGRAM_ID,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: ASSOC_TOKEN_ACC_PROG,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: TOKEN_PROGRAM_ID,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: PUMP_FUN_ACCOUNT,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: PUMP_FUN_PROGRAM,
+        isSigner: false,
+        isWritable: false
+      }
+    ];
+    const data = Buffer.concat([
+      bufferFromUInt64("12502976635542562355"),
+      bufferFromUInt64(tokenBalance),
+      bufferFromUInt64(minSolOutput)
     ]);
     const instruction = new import_web34.TransactionInstruction({
       keys,

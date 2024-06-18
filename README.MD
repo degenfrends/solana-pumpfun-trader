@@ -1,4 +1,4 @@
-# Solana Rugchecker
+# Solana Pump.fun Trader
 
 ![Static Badge](https://img.shields.io/badge/degen-100%25-pink)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/degenfrends/solana-pumpfun-trader/publish.yml)
@@ -10,10 +10,12 @@
 
 ## This project is more or less a copy of https://github.com/bilix-software/solana-pump-fun. I made a npm package out of it and resturctured/refactored the code a little bit.
 
+## If you made some money off of this and you want to contribute to the ongoing development, you can send some SOL to this address: xe18XoG9HpgpmZ6C4GLAfnDtD7xGc6dEjen7NfF3V9g
+
 [Join the discord if you are looking for fellow degen developers!](https://discord.gg/HUVAbet2Dp)
 
 > [!CAUTION] 
-> Do not use your main wallet with this script! Always use a trading wallet with your trading budget.
+> Do not use your main wallet with this script! Always use a trading wallet with your trading budget. Don't be lazy! Create a wallet for this now!
 
 Solan Pump.fun Trader is a library to execute buy and sell orders for SPL tokens that were created on pump.fun.
 
@@ -25,6 +27,33 @@ Just install it with npm or yarn or whatever.
 npm install "@degenfrends/solana-pumpfun-trader"
 ```
 
-## Configuration
+## Configuration & Usage
 
-TBD
+```typescript
+import PumpFunTrader from '@degenfrends/solana-pumpfun-trader';
+
+const pumpFunTrader = new PumpFunTrader();
+this.pumpFunTrader.setSolanaRpcUrl('https://yoursolanarpc.com');
+
+await this.pumpFunTrader.buy(
+        privateKey: '12123423434234', // your private key
+        tokenAddress: 'ejddjsldjsdlks', // the address of the token you want to buy
+        amount: 0.5, // amount in solana
+        priorityFee: 0, // (optional) you should increase the priority fee when you want to make sure that transactions are always succesfull.
+        slippage: 0.25, // (optional) 0.25 equals 25% slippage.
+        isSimulation: false // (optional) 
+);
+
+await this.pumpFunTrader.sell(
+    privateKey: '12123423434234', // your private key
+    tokenAddress: 'ejddjsldjsdlks', // the address of the token you want to sell
+    tokenBalance: 10000000 // the amounts of token you want to sell, you need to multiply the amount you want to sell by 1000000 since pump.fun tokens have 6 digits,
+    priorityFee: 0, // (optional) you should increase the priority fee when you want to make sure that transactions are always succesfull.
+    slippage: 0.25, // (optional) 0.25 equals 25% slippage.
+    isSimulation: false // (optional) 
+);
+```
+
+There are functions to build sell and buy transaction instructions too, which you can use to bundle transactions.
+
+If you have any questions or suggestions, [join the discord!](https://discord.gg/HUVAbet2Dp)
