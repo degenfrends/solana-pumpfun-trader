@@ -17,7 +17,10 @@ declare class PumpFunTrader {
     buy(privateKey: string, tokenAddress: string, amount: number, priorityFee?: number, slippage?: number, isSimulation?: boolean): Promise<void>;
     sell(privateKey: string, tokenAddress: string, tokenBalance: number, priorityFee?: number, slippage?: number, isSimulation?: boolean): Promise<void>;
     createAndSendTransaction(txBuilder: Transaction, privateKey: string, priorityFee?: number, isSimulation?: boolean): Promise<void>;
-    getBuyInstruction(privateKey: string, tokenAddress: string, amount: number, slippage: number | undefined, txBuilder: Transaction): Promise<TransactionInstruction | undefined>;
+    getBuyInstruction(privateKey: string, tokenAddress: string, amount: number, slippage: number | undefined, txBuilder: Transaction): Promise<{
+        instruction: TransactionInstruction;
+        tokenAmount: number;
+    } | undefined>;
     getSellInstruction(privateKey: string, tokenAddress: string, tokenBalance: number, priorityFee?: number, slippage?: number): Promise<TransactionInstruction | undefined>;
 }
 

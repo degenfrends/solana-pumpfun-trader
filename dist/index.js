@@ -161,11 +161,11 @@ var PumpFunTrader = class {
     try {
       const txBuilder = new import_web34.Transaction();
       const instruction = await this.getBuyInstruction(privateKey, tokenAddress, amount, slippage, txBuilder);
-      if (!instruction) {
+      if (!instruction?.instruction) {
         this.logger.error("Failed to retrieve buy instruction...");
         return;
       }
-      txBuilder.add(instruction);
+      txBuilder.add(instruction.instruction);
       await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
     } catch (error) {
       this.logger.log(error);
@@ -297,7 +297,10 @@ var PumpFunTrader = class {
       programId: PUMP_FUN_PROGRAM,
       data
     });
-    return instruction;
+    return {
+      instruction,
+      tokenAmount: tokenOut
+    };
   }
   async getSellInstruction(privateKey, tokenAddress, tokenBalance, priorityFee = 0, slippage = 0.25) {
     const coinData = await getCoinData(tokenAddress);
