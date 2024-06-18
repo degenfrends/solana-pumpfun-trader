@@ -167,6 +167,7 @@ var PumpFunTrader = class {
       }
       txBuilder.add(instruction);
       const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
+
       const transaction = await createTransaction(this.connection, txBuilder.instructions, walletPrivateKey.publicKey, priorityFee);
       if (isSimulation == false) {
         const signature = await sendTransaction(this.connection, transaction, [
@@ -389,6 +390,7 @@ var PumpFunTrader = class {
     });
     return instruction;
   }
+
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {

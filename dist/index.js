@@ -119,6 +119,7 @@ var PumpFunTrader = class {
   }
   async buy(privateKey, tokenAddress, amount, priorityFee = 0, slippage = 0.25, isSimulation = true) {
     try {
+
       const txBuilder = new Transaction2();
       const instruction = await this.getBuyInstruction(privateKey, tokenAddress, amount, slippage, txBuilder);
       if (!instruction) {
@@ -267,6 +268,7 @@ var PumpFunTrader = class {
     } else {
       tokenAccount = tokenAccountAddress;
     }
+
     const solInLamports = amount * LAMPORTS_PER_SOL;
     const tokenOut = Math.floor(solInLamports * coinData["virtual_token_reserves"] / coinData["virtual_sol_reserves"]);
     const amountWithSlippage = amount * (1 + slippage);
@@ -274,7 +276,6 @@ var PumpFunTrader = class {
     const ASSOCIATED_USER = tokenAccount;
     const USER = owner;
     const BONDING_CURVE = new PublicKey(coinData["bonding_curve"]);
-    const ASSOCIATED_BONDING_CURVE = new PublicKey(coinData["associated_bonding_curve"]);
     const keys = [
       {
         pubkey: GLOBAL,
@@ -343,6 +344,7 @@ var PumpFunTrader = class {
       bufferFromUInt64(maxSolCost)
     ]);
     const instruction = new TransactionInstruction({
+
       keys,
       programId: PUMP_FUN_PROGRAM,
       data
