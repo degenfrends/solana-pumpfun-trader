@@ -61,7 +61,7 @@ __name(bufferFromUInt64, "bufferFromUInt64");
 import axios from "axios";
 async function getCoinData(mintStr) {
   try {
-    const url = `https://client-api-2-74b1891ee9f9.herokuapp.com/coins/${mintStr}`;
+    const url = `https://frontend-api.pump.fun/coins/${mintStr}`;
     const response = await axios.get(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
@@ -119,105 +119,14 @@ var PumpFunTrader = class {
   }
   async buy(privateKey, tokenAddress, amount, priorityFee = 0, slippage = 0.25, isSimulation = true) {
     try {
-      const coinData = await getCoinData(tokenAddress);
-      if (!coinData) {
-        this.logger.error("Failed to retrieve coin data...");
+      const txBuilder = new Transaction2();
+      const instruction = await this.getBuyInstruction(privateKey, tokenAddress, amount, slippage, txBuilder);
+      if (!instruction) {
+        this.logger.error("Failed to retrieve buy instruction...");
         return;
       }
-      const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
-      const owner = walletPrivateKey.publicKey;
-      const token = new PublicKey(tokenAddress);
-      const txBuilder = new Transaction2();
-      const tokenAccountAddress = await getAssociatedTokenAddress(token, owner, false);
-      const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
-      let tokenAccount;
-      if (!tokenAccountInfo) {
-        txBuilder.add(createAssociatedTokenAccountInstruction(walletPrivateKey.publicKey, tokenAccountAddress, walletPrivateKey.publicKey, token));
-        tokenAccount = tokenAccountAddress;
-      } else {
-        tokenAccount = tokenAccountAddress;
-      }
-      const solInLamports = amount * LAMPORTS_PER_SOL;
-      const tokenOut = Math.floor(solInLamports * coinData["virtual_token_reserves"] / coinData["virtual_sol_reserves"]);
-      const amountWithSlippage = amount * (1 + slippage);
-      const maxSolCost = Math.floor(amountWithSlippage * LAMPORTS_PER_SOL);
-      const ASSOCIATED_USER = tokenAccount;
-      const USER = owner;
-      const BONDING_CURVE = new PublicKey(coinData["bonding_curve"]);
-      const ASSOCIATED_BONDING_CURVE = new PublicKey(coinData["associated_bonding_curve"]);
-      const keys = [
-        {
-          pubkey: GLOBAL,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: FEE_RECIPIENT,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: token,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: BONDING_CURVE,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: ASSOCIATED_BONDING_CURVE,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: ASSOCIATED_USER,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: USER,
-          isSigner: false,
-          isWritable: true
-        },
-        {
-          pubkey: SYSTEM_PROGRAM_ID,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: TOKEN_PROGRAM_ID,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: RENT,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: PUMP_FUN_ACCOUNT,
-          isSigner: false,
-          isWritable: false
-        },
-        {
-          pubkey: PUMP_FUN_PROGRAM,
-          isSigner: false,
-          isWritable: false
-        }
-      ];
-      const data = Buffer.concat([
-        bufferFromUInt64("16927863322537952870"),
-        bufferFromUInt64(tokenOut),
-        bufferFromUInt64(maxSolCost)
-      ]);
-      const instruction = new TransactionInstruction({
-        keys,
-        programId: PUMP_FUN_PROGRAM,
-        data
-      });
       txBuilder.add(instruction);
+      const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
       const transaction = await createTransaction(this.connection, txBuilder.instructions, walletPrivateKey.publicKey, priorityFee);
       if (isSimulation == false) {
         const signature = await sendTransaction(this.connection, transaction, [
@@ -339,6 +248,106 @@ var PumpFunTrader = class {
     } catch (error) {
       this.logger.log(error);
     }
+  }
+  async getBuyInstruction(privateKey, tokenAddress, amount, slippage = 0.25, txBuilder) {
+    const coinData = await getCoinData(tokenAddress);
+    if (!coinData) {
+      this.logger.error("Failed to retrieve coin data...");
+      return;
+    }
+    const walletPrivateKey = await getKeyPairFromPrivateKey(privateKey);
+    const owner = walletPrivateKey.publicKey;
+    const token = new PublicKey(tokenAddress);
+    const tokenAccountAddress = await getAssociatedTokenAddress(token, owner, false);
+    const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
+    let tokenAccount;
+    if (!tokenAccountInfo) {
+      txBuilder.add(createAssociatedTokenAccountInstruction(walletPrivateKey.publicKey, tokenAccountAddress, walletPrivateKey.publicKey, token));
+      tokenAccount = tokenAccountAddress;
+    } else {
+      tokenAccount = tokenAccountAddress;
+    }
+    const solInLamports = amount * LAMPORTS_PER_SOL;
+    const tokenOut = Math.floor(solInLamports * coinData["virtual_token_reserves"] / coinData["virtual_sol_reserves"]);
+    const amountWithSlippage = amount * (1 + slippage);
+    const maxSolCost = Math.floor(amountWithSlippage * LAMPORTS_PER_SOL);
+    const ASSOCIATED_USER = tokenAccount;
+    const USER = owner;
+    const BONDING_CURVE = new PublicKey(coinData["bonding_curve"]);
+    const ASSOCIATED_BONDING_CURVE = new PublicKey(coinData["associated_bonding_curve"]);
+    const keys = [
+      {
+        pubkey: GLOBAL,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: FEE_RECIPIENT,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: token,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: BONDING_CURVE,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: ASSOCIATED_BONDING_CURVE,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: ASSOCIATED_USER,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: USER,
+        isSigner: false,
+        isWritable: true
+      },
+      {
+        pubkey: SYSTEM_PROGRAM_ID,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: TOKEN_PROGRAM_ID,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: RENT,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: PUMP_FUN_ACCOUNT,
+        isSigner: false,
+        isWritable: false
+      },
+      {
+        pubkey: PUMP_FUN_PROGRAM,
+        isSigner: false,
+        isWritable: false
+      }
+    ];
+    const data = Buffer.concat([
+      bufferFromUInt64("16927863322537952870"),
+      bufferFromUInt64(tokenOut),
+      bufferFromUInt64(maxSolCost)
+    ]);
+    const instruction = new TransactionInstruction({
+      keys,
+      programId: PUMP_FUN_PROGRAM,
+      data
+    });
+    return instruction;
   }
 };
 export {
