@@ -1,5 +1,11 @@
 # @degenfrends/solana-pumpfun-trader
 
+## 0.0.11
+
+### Patch Changes
+
+-   a1e41a9: ## @degenfrends/solana-pumpfun-trader: Discord fixes
+
 ## 0.0.10
 
 ### Patch Changes
