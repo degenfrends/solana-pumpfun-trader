@@ -166,22 +166,24 @@ var PumpFunTrader = class {
         return;
       }
       txBuilder.add(instruction.instruction);
-      await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+      const signature = await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+      this.logger.log("Sell transaction confirmed:", signature);
+      return signature;
     } catch (error) {
       this.logger.log(error);
     }
   }
   async sell(privateKey, tokenAddress, tokenBalance, priorityFee = 0, slippage = 0.25, isSimulation = true) {
     try {
-      const instruction = await this.getSellInstruction(privateKey, tokenAddress, tokenBalance, priorityFee, slippage);
+      const instruction = await this.getSellInstruction(privateKey, tokenAddress, tokenBalance, slippage);
       const txBuilder = new import_web34.Transaction();
       if (!instruction) {
         this.logger.error("Failed to retrieve sell instruction...");
         return;
       }
       txBuilder.add(instruction);
-      const payer = await getKeyPairFromPrivateKey(privateKey);
-      await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+      const signature = await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+      this.logger.log("Sell transaction confirmed:", signature);
     } catch (error) {
       this.logger.log(error);
     }
@@ -194,6 +196,7 @@ var PumpFunTrader = class {
         walletPrivateKey
       ]);
       this.logger.log("Buy transaction confirmed:", signature);
+      return signature;
     } else if (isSimulation == true) {
       const simulatedResult = await this.connection.simulateTransaction(transaction);
       this.logger.log(simulatedResult);
@@ -302,7 +305,7 @@ var PumpFunTrader = class {
       tokenAmount: tokenOut
     };
   }
-  async getSellInstruction(privateKey, tokenAddress, tokenBalance, priorityFee = 0, slippage = 0.25) {
+  async getSellInstruction(privateKey, tokenAddress, tokenBalance, slippage = 0.25) {
     const coinData = await getCoinData(tokenAddress);
     if (!coinData) {
       this.logger.error("Failed to retrieve coin data...");

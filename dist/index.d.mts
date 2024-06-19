@@ -14,14 +14,14 @@ declare class PumpFunTrader {
     constructor(solanaRpcUrl?: string, logger?: any);
     setSolanaRpcUrl(solanaRpcUrl: string): this;
     setLogger(logger: any): this;
-    buy(privateKey: string, tokenAddress: string, amount: number, priorityFee?: number, slippage?: number, isSimulation?: boolean): Promise<void>;
+    buy(privateKey: string, tokenAddress: string, amount: number, priorityFee?: number, slippage?: number, isSimulation?: boolean): Promise<string | null | undefined>;
     sell(privateKey: string, tokenAddress: string, tokenBalance: number, priorityFee?: number, slippage?: number, isSimulation?: boolean): Promise<void>;
-    createAndSendTransaction(txBuilder: Transaction, privateKey: string, priorityFee?: number, isSimulation?: boolean): Promise<void>;
+    createAndSendTransaction(txBuilder: Transaction, privateKey: string, priorityFee?: number, isSimulation?: boolean): Promise<string | null | undefined>;
     getBuyInstruction(privateKey: string, tokenAddress: string, amount: number, slippage: number | undefined, txBuilder: Transaction): Promise<{
         instruction: TransactionInstruction;
         tokenAmount: number;
     } | undefined>;
-    getSellInstruction(privateKey: string, tokenAddress: string, tokenBalance: number, priorityFee?: number, slippage?: number): Promise<TransactionInstruction | undefined>;
+    getSellInstruction(privateKey: string, tokenAddress: string, tokenBalance: number, slippage?: number): Promise<TransactionInstruction | undefined>;
 }
 
 export { ASSOC_TOKEN_ACC_PROG, FEE_RECIPIENT, GLOBAL, PUMP_FUN_ACCOUNT, PUMP_FUN_PROGRAM, RENT, SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, PumpFunTrader as default };
