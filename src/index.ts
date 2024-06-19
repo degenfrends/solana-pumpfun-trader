@@ -45,14 +45,16 @@ export default class PumpFunTrader {
     ) {
         try {
             const txBuilder = new Transaction();
-
             const instruction = await this.getBuyInstruction(privateKey, tokenAddress, amount, slippage, txBuilder);
             if (!instruction?.instruction) {
                 this.logger.error('Failed to retrieve buy instruction...');
                 return;
             }
             txBuilder.add(instruction.instruction);
-            await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+            const signature = await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+            this.logger.log('Sell transaction confirmed:', signature);
+
+            return signature;
         } catch (error) {
             this.logger.log(error);
         }
@@ -67,7 +69,7 @@ export default class PumpFunTrader {
         isSimulation: boolean = true
     ) {
         try {
-            const instruction = await this.getSellInstruction(privateKey, tokenAddress, tokenBalance, priorityFee, slippage);
+            const instruction = await this.getSellInstruction(privateKey, tokenAddress, tokenBalance, slippage);
             const txBuilder = new Transaction();
             if (!instruction) {
                 this.logger.error('Failed to retrieve sell instruction...');
@@ -76,9 +78,8 @@ export default class PumpFunTrader {
 
             txBuilder.add(instruction);
 
-            const payer = await getKeyPairFromPrivateKey(privateKey);
-
-            await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+            const signature = await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
+            this.logger.log('Sell transaction confirmed:', signature);
         } catch (error) {
             this.logger.log(error);
         }
@@ -89,6 +90,7 @@ export default class PumpFunTrader {
         if (isSimulation == false) {
             const signature = await sendTransaction(this.connection, transaction, [walletPrivateKey]);
             this.logger.log('Buy transaction confirmed:', signature);
+            return signature;
         } else if (isSimulation == true) {
             const simulatedResult = await this.connection.simulateTransaction(transaction);
             this.logger.log(simulatedResult);
@@ -153,7 +155,7 @@ export default class PumpFunTrader {
 
         return { instruction: instruction, tokenAmount: tokenOut };
     }
-    async getSellInstruction(privateKey: string, tokenAddress: string, tokenBalance: number, priorityFee: number = 0, slippage: number = 0.25) {
+    async getSellInstruction(privateKey: string, tokenAddress: string, tokenBalance: number, slippage: number = 0.25) {
         const coinData = await getCoinData(tokenAddress);
         if (!coinData) {
             this.logger.error('Failed to retrieve coin data...');
