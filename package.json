@@ -1,6 +1,6 @@
 {
     "name": "@degenfrends/solana-pumpfun-trader",
-    "version": "0.0.14",
+    "version": "0.0.15",
     "description": "Functions to buy and sell SPL tokens on pump.fun",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
