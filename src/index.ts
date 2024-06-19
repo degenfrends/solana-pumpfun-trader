@@ -43,8 +43,6 @@ export default class PumpFunTrader {
         isSimulation: boolean = true
     ) {
         try {
-            const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-
             const coinData = await getCoinData(mintStr);
             if (!coinData) {
                 console.error('Failed to retrieve coin data...');
@@ -59,7 +57,7 @@ export default class PumpFunTrader {
 
             const tokenAccountAddress = await getAssociatedTokenAddress(mint, owner, false);
 
-            const tokenAccountInfo = await connection.getAccountInfo(tokenAccountAddress);
+            const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
 
             let tokenAccount: PublicKey;
             if (!tokenAccountInfo) {
@@ -103,12 +101,12 @@ export default class PumpFunTrader {
             });
             txBuilder.add(instruction);
 
-            const transaction = await createTransaction(connection, txBuilder.instructions, payer.publicKey, priorityFeeInSol);
+            const transaction = await createTransaction(this.connection, txBuilder.instructions, payer.publicKey, priorityFeeInSol);
             if (!isSimulation) {
-                const signature = await sendTransaction(connection, transaction, [payer]);
+                const signature = await sendTransaction(this.connection, transaction, [payer]);
                 console.log('Buy transaction confirmed:', signature);
             } else if (isSimulation) {
-                const simulatedResult = await connection.simulateTransaction(transaction);
+                const simulatedResult = await this.connection.simulateTransaction(transaction);
                 console.log(simulatedResult);
             }
         } catch (error) {
@@ -124,8 +122,6 @@ export default class PumpFunTrader {
         isSimulation: boolean = true
     ) {
         try {
-            const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-
             const coinData = await getCoinData(mintStr);
             if (!coinData) {
                 console.error('Failed to retrieve coin data...');
@@ -139,7 +135,7 @@ export default class PumpFunTrader {
 
             const tokenAccountAddress = await getAssociatedTokenAddress(mint, owner, false);
 
-            const tokenAccountInfo = await connection.getAccountInfo(tokenAccountAddress);
+            const tokenAccountInfo = await this.connection.getAccountInfo(tokenAccountAddress);
 
             let tokenAccount: PublicKey;
             if (!tokenAccountInfo) {
@@ -177,13 +173,13 @@ export default class PumpFunTrader {
             });
             txBuilder.add(instruction);
 
-            const transaction = await createTransaction(connection, txBuilder.instructions, payer.publicKey, priorityFeeInSol);
+            const transaction = await createTransaction(this.connection, txBuilder.instructions, payer.publicKey, priorityFeeInSol);
 
             if (!isSimulation) {
-                const signature = await sendTransaction(connection, transaction, [payer]);
+                const signature = await sendTransaction(this.connection, transaction, [payer]);
                 console.log('Sell transaction confirmed:', signature);
             } else if (isSimulation) {
-                const simulatedResult = await connection.simulateTransaction(transaction);
+                const simulatedResult = await this.connection.simulateTransaction(transaction);
                 console.log(simulatedResult);
             }
         } catch (error) {
