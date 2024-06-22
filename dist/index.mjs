@@ -28,16 +28,15 @@ __name(createTransaction, "createTransaction");
 
 // src/utils/send-transaction.ts
 import { sendAndConfirmTransaction } from "@solana/web3.js";
-async function sendTransaction(connection, transaction, signers) {
+async function sendTransaction(connection, transaction, signers, logger = console) {
   try {
     const signature = await sendAndConfirmTransaction(connection, transaction, signers, {
       skipPreflight: true,
       preflightCommitment: "confirmed"
     });
-    console.log("Transaction confirmed with signature:", signature);
     return signature;
   } catch (error) {
-    console.error("Error sending transaction:", error);
+    logger.error("Error sending transaction:", error);
     return null;
   }
 }
@@ -59,7 +58,7 @@ __name(bufferFromUInt64, "bufferFromUInt64");
 
 // src/utils/get-token-data.ts
 import axios from "axios";
-async function getCoinData(mintStr) {
+async function getTokenData(mintStr, logger = console) {
   try {
     const url = `https://frontend-api.pump.fun/coins/${mintStr}`;
     const response = await axios.get(url, {
@@ -80,17 +79,19 @@ async function getCoinData(mintStr) {
     if (response.status === 200) {
       return response.data;
     } else {
-      console.error("Failed to retrieve coin data:", response.status);
+      logger.error("Failed to retrieve coin data:", response.status);
       return null;
     }
   } catch (error) {
-    console.error("Error fetching coin data:", error);
+    logger.error("Error fetching coin data:", error);
     return null;
   }
 }
-__name(getCoinData, "getCoinData");
+__name(getTokenData, "getTokenData");
 
 // src/index.ts
+import { config } from "dotenv";
+config();
 var GLOBAL = new PublicKey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf");
 var FEE_RECIPIENT = new PublicKey("CebN5WGQ4jvEPvsVU4EoHEpgzq1VV7AbicfhtW4xC9iM");
 var TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
@@ -106,7 +107,11 @@ var PumpFunTrader = class {
   connection;
   logger;
   constructor(solanaRpcUrl = "https://api.mainnet-beta.solana.com", logger = console) {
-    this.connection = new Connection(solanaRpcUrl, "confirmed");
+    if (process.env.RPC_URL) {
+      this.connection = new Connection(process.env.RPC_URL, "confirmed");
+    } else {
+      this.connection = new Connection(solanaRpcUrl, "confirmed");
+    }
     this.logger = logger;
   }
   setSolanaRpcUrl(solanaRpcUrl) {
@@ -127,7 +132,7 @@ var PumpFunTrader = class {
       }
       txBuilder.add(instruction.instruction);
       const signature = await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
-      this.logger.log("Sell transaction confirmed:", signature);
+      this.logger.log("Buy transaction confirmed:", signature);
       return signature;
     } catch (error) {
       this.logger.log(error);
@@ -154,8 +159,8 @@ var PumpFunTrader = class {
     if (isSimulation == false) {
       const signature = await sendTransaction(this.connection, transaction, [
         walletPrivateKey
-      ]);
-      this.logger.log("Buy transaction confirmed:", signature);
+      ], this.logger);
+      this.logger.log("Transaction confirmed:", signature);
       return signature;
     } else if (isSimulation == true) {
       const simulatedResult = await this.connection.simulateTransaction(transaction);
@@ -163,7 +168,7 @@ var PumpFunTrader = class {
     }
   }
   async getBuyInstruction(privateKey, tokenAddress, amount, slippage = 0.25, txBuilder) {
-    const coinData = await getCoinData(tokenAddress);
+    const coinData = await getTokenData(tokenAddress, this.logger);
     if (!coinData) {
       this.logger.error("Failed to retrieve coin data...");
       return;
@@ -266,7 +271,7 @@ var PumpFunTrader = class {
     };
   }
   async getSellInstruction(privateKey, tokenAddress, tokenBalance, slippage = 0.25) {
-    const coinData = await getCoinData(tokenAddress);
+    const coinData = await getTokenData(tokenAddress);
     if (!coinData) {
       this.logger.error("Failed to retrieve coin data...");
       return;

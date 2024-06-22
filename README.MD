@@ -10,8 +10,6 @@
 
 ## This project is more or less a copy of https://github.com/bilix-software/solana-pump-fun. I made a npm package out of it and resturctured/refactored the code a little bit.
 
-## If you made some money off of this and you want to contribute to the ongoing development, you can send some SOL to this address: xe18XoG9HpgpmZ6C4GLAfnDtD7xGc6dEjen7NfF3V9g
-
 [Join the discord if you are looking for fellow degen developers!](https://discord.gg/HUVAbet2Dp)
 
 > [!CAUTION] 

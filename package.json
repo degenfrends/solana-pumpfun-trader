@@ -17,7 +17,8 @@
         "@solana/spl-token": "^0.4.6",
         "@solana/web3.js": "^1.93.0",
         "axios": "^1.7.2",
-        "bs58": "^5.0.0"
+        "bs58": "^5.0.0",
+        "dotenv": "^16.4.5"
     },
     "devDependencies": {
         "@changesets/cli": "^2.27.5",

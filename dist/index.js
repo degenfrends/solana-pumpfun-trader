@@ -68,16 +68,15 @@ __name(createTransaction, "createTransaction");
 
 // src/utils/send-transaction.ts
 var import_web32 = require("@solana/web3.js");
-async function sendTransaction(connection, transaction, signers) {
+async function sendTransaction(connection, transaction, signers, logger = console) {
   try {
     const signature = await (0, import_web32.sendAndConfirmTransaction)(connection, transaction, signers, {
       skipPreflight: true,
       preflightCommitment: "confirmed"
     });
-    console.log("Transaction confirmed with signature:", signature);
     return signature;
   } catch (error) {
-    console.error("Error sending transaction:", error);
+    logger.error("Error sending transaction:", error);
     return null;
   }
 }
@@ -99,7 +98,7 @@ __name(bufferFromUInt64, "bufferFromUInt64");
 
 // src/utils/get-token-data.ts
 var import_axios = __toESM(require("axios"));
-async function getCoinData(mintStr) {
+async function getTokenData(mintStr, logger = console) {
   try {
     const url = `https://frontend-api.pump.fun/coins/${mintStr}`;
     const response = await import_axios.default.get(url, {
@@ -120,17 +119,19 @@ async function getCoinData(mintStr) {
     if (response.status === 200) {
       return response.data;
     } else {
-      console.error("Failed to retrieve coin data:", response.status);
+      logger.error("Failed to retrieve coin data:", response.status);
       return null;
     }
   } catch (error) {
-    console.error("Error fetching coin data:", error);
+    logger.error("Error fetching coin data:", error);
     return null;
   }
 }
-__name(getCoinData, "getCoinData");
+__name(getTokenData, "getTokenData");
 
 // src/index.ts
+var import_dotenv = require("dotenv");
+(0, import_dotenv.config)();
 var GLOBAL = new import_web34.PublicKey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf");
 var FEE_RECIPIENT = new import_web34.PublicKey("CebN5WGQ4jvEPvsVU4EoHEpgzq1VV7AbicfhtW4xC9iM");
 var TOKEN_PROGRAM_ID = new import_web34.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
@@ -146,7 +147,11 @@ var PumpFunTrader = class {
   connection;
   logger;
   constructor(solanaRpcUrl = "https://api.mainnet-beta.solana.com", logger = console) {
-    this.connection = new import_web34.Connection(solanaRpcUrl, "confirmed");
+    if (process.env.RPC_URL) {
+      this.connection = new import_web34.Connection(process.env.RPC_URL, "confirmed");
+    } else {
+      this.connection = new import_web34.Connection(solanaRpcUrl, "confirmed");
+    }
     this.logger = logger;
   }
   setSolanaRpcUrl(solanaRpcUrl) {
@@ -167,7 +172,7 @@ var PumpFunTrader = class {
       }
       txBuilder.add(instruction.instruction);
       const signature = await this.createAndSendTransaction(txBuilder, privateKey, priorityFee, isSimulation);
-      this.logger.log("Sell transaction confirmed:", signature);
+      this.logger.log("Buy transaction confirmed:", signature);
       return signature;
     } catch (error) {
       this.logger.log(error);
@@ -194,8 +199,8 @@ var PumpFunTrader = class {
     if (isSimulation == false) {
       const signature = await sendTransaction(this.connection, transaction, [
         walletPrivateKey
-      ]);
-      this.logger.log("Buy transaction confirmed:", signature);
+      ], this.logger);
+      this.logger.log("Transaction confirmed:", signature);
       return signature;
     } else if (isSimulation == true) {
       const simulatedResult = await this.connection.simulateTransaction(transaction);
@@ -203,7 +208,7 @@ var PumpFunTrader = class {
     }
   }
   async getBuyInstruction(privateKey, tokenAddress, amount, slippage = 0.25, txBuilder) {
-    const coinData = await getCoinData(tokenAddress);
+    const coinData = await getTokenData(tokenAddress, this.logger);
     if (!coinData) {
       this.logger.error("Failed to retrieve coin data...");
       return;
@@ -306,7 +311,7 @@ var PumpFunTrader = class {
     };
   }
   async getSellInstruction(privateKey, tokenAddress, tokenBalance, slippage = 0.25) {
-    const coinData = await getCoinData(tokenAddress);
+    const coinData = await getTokenData(tokenAddress);
     if (!coinData) {
       this.logger.error("Failed to retrieve coin data...");
       return;

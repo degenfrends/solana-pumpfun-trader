@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export default async function getCoinData(mintStr: string) {
+export default async function getTokenData(mintStr: string, logger: any = console) {
     try {
         const url = `https://frontend-api.pump.fun/coins/${mintStr}`;
         const response = await axios.get(url, {
@@ -21,11 +21,11 @@ export default async function getCoinData(mintStr: string) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.error('Failed to retrieve coin data:', response.status);
+            logger.error('Failed to retrieve coin data:', response.status);
             return null;
         }
     } catch (error) {
-        console.error('Error fetching coin data:', error);
+        logger.error('Error fetching coin data:', error);
         return null;
     }
 }
